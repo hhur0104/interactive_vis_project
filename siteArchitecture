@@ -1,0 +1,19 @@
+<body>
+    
+    <div id="container">
+        <svg>
+            <path class="asia"></path> // for each country
+            <path class="asia"></path>
+            ...
+            <path class="asia"></path>
+            <path class="asia"></path>
+         </svg>
+        <div id="onclick-content"> 
+            <h4> country name</h4>
+            <p> some txt info </p>
+            <p> some txt info </p>
+            <svg id="bar-chart"></svg>
+            <svg id="pie-chart"></svg>
+        </div>
+    </div>
+</body>
