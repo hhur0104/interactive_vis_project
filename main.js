@@ -21,8 +21,8 @@ let state = {
 * */
 Promise.all([
  d3.json("./data/asia.geo.json"),
- d3.csv("./data/import.19.csv"),
- d3.csv("./data/export.19.csv"),
+ d3.csv("./data/Import.19.csv"),
+ d3.csv("./data/Export.19.csv"),
  d3.csv("./data/data.19.csv") // .json from https://geojson-maps.ash.ms
 ]).then(([geojson, importdata, exportdata, oildata]) => {
  state.geojson = geojson;
