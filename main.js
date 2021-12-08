@@ -7,6 +7,7 @@
 const countryLookup = [{}];
 var importData = [];
 var exportData = [];
+var nodatalist= [];
 /**
 * APPLICATION STATE
 * */
@@ -23,17 +24,20 @@ Promise.all([
  d3.json("./data/asia.geo.json"),
  d3.csv("./data/Import.19.csv"),
  d3.csv("./data/Export.19.csv"),
- d3.csv("./data/data.19.csv") // .json from https://geojson-maps.ash.ms
-]).then(([geojson, importdata, exportdata, oildata]) => {
+ d3.csv("./data/data.19.csv"),
+ d3.csv("./data/nodata_list.csv") // .json from https://geojson-maps.ash.ms
+]).then(([geojson, importdata, exportdata, oildata, nodata_list]) => {
  state.geojson = geojson;
  state.oildata = oildata;
  importData = importdata;
  state.tabledata = importData;
  exportData = exportdata;
+ nodatalist = nodata_list.map(d=> d.x);
 
  console.log("state.geojson: ", state.geojson.features);
  console.log("oildata:",state.oildata)
  console.log("importData:", importData)
+ console.log("nodatalist:", nodatalist)
  init();
 });
 
@@ -51,8 +55,8 @@ function init() {
 
     state.oildata.map(function(d) {
         countryLookup[d.country] = [{"source":"Oil", "value": +d.oil },
-                                   {"source":"Coal","value": +d.coal},
-                                   {"source":"Nuclear", "value": +d.nuclear},
+                                   {"source":"Coal","value": +d.coal },
+                                   {"source":"Nuclear", "value": +d.nuclear },
                                    {"source":"Renewables", "value": +d.renewables}]
     })
 
@@ -88,7 +92,7 @@ function init() {
         state.bardata = countryLookup[state.selected]
         draw_left()
 
-        d3.select("#"+state.selected).attr("class","flash")
+        d3.select("#"+state.selected.replace(/\s+/g, '')).attr("class","flash")
     })
 
     asia.on("mouseout", ev => {
@@ -106,8 +110,8 @@ function init() {
         console.log('CountryLookup :>> ', countryLookup[state.selected]);
         state.bardata = countryLookup[state.selected]
         draw_left()
-
-        d3.select("#"+state.selected).attr("class","flash")
+        
+        d3.select("#"+state.selected.replace(/\s+/g, '')).attr("class","flash")
         
     })
 
@@ -143,6 +147,7 @@ function init() {
 * we call this every time there is an update to the data/state
 * */
 function draw_left() {
+    no_consumption_data = nodatalist.indexOf(state.selected) !== -1
 
     width_l = d3.select("#col_left").node().getBoundingClientRect().width 
     height_l = d3.select('#col_left').node().getBoundingClientRect().height / 2
@@ -251,9 +256,20 @@ function draw_left() {
         .transition()
         .duration(1000)
         .call(d3.axisLeft(yScale)) //const yAxis = d3.axisLeft(yScale)
+    
+    if (no_consumption_data) {
+        d3.select("#col_left")
+            .append("p")
+            .text('*No Consumption Data is Available. Shows sources used to produce electricity.')
+    } else {
+        d3.select("#col_left")
+            .append("p")
+            .text('*Energy Consumption Data of 2019.')
+    }
         
-
+    
     console.log("======",state.selected,"======")
+    console.log("No Consumption? ",no_consumption_data)
     state.bardata.map(d=> console.log("yValue, Scale: ", d.value, yScale(d.value)))
     state.bardata.map(d=> console.log("xSource, Scale:", d.source, xScale(d.source)))
 
@@ -286,7 +302,8 @@ function drawTable(container) {
             .data(state.tabledata)
             .join("tr")
             .attr("class","row")
-            .attr("id",row => row.Country)
+            .attr("id",row => row.Country.replace(/\s+/g, ''))
+    
 
     cells = rows.selectAll(".cell")
             .data(row => Object.values(row))

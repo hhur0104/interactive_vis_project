@@ -46,9 +46,29 @@ dt.16.e[,1] <-NULL
 dt.16.e[is.na(dt.16.e)] <- 0
 
 colnames(dt.16.e) <- gsub(tgt,"",colnames(dt.16.e))
-write.csv(dt.16.e, file="data.19.csv")
-table(rowSums(dt.16.e[,1:12]) == 0)
+#write.csv(dt.16.e, file="data.19.csv")
 
+# Replace No "Consumption" Countries Entry with "Electricity"
+table(rowSums(dt.16.e[,1:12]) == 0)
+write.csv(dt.16.e[rowSums(dt.16.e[,1:12]) == 0,"country"],file="nodata_list.csv")
+no_consumption <- dt.16.e[rowSums(dt.16.e[,1:12]) == 0,"country"]
+
+no_cons_df <- dt.16[dt.16$country %in% no_consumption,]
+colnames(no_cons_df)[grep("_electricity",colnames(no_cons_df))]
+no_cons_df <- no_cons_df[,colnames(no_cons_df)[grep("_electricity",colnames(no_cons_df))]]
+no_cons_df[is.na(no_cons_df)] <- 0
+colnames(no_cons_df)<-gsub("_electricity","",colnames(no_cons_df))
+
+no_cons_df<-no_cons_df[,colnames(no_cons_df) %in% colnames(dt.16.e)]
+no_cons_df$country <- rownames(no_cons_df)
+
+dt.16.e<-dt.16.e[,colnames(no_cons_df)]
+dt.16.e<-dt.16.e[!dt.16.e$country %in% no_consumption,] # Select only those with some consumption data
+
+identical(colnames(dt.16.e), colnames(no_cons_df)) # must be true
+dt.final <- rbind(dt.16.e, no_cons_df)
+
+write.csv(dt.final, file="data.19.csv")
 #tgt.col.index <- grep("energy_per_capita",colnames(dt.16[target.dt.names %in% dt.16$country,]))
 #colnames(dt.16)[tgt.col.index]
 
